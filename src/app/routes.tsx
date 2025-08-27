@@ -4,39 +4,53 @@ import Transactions from '@/features/transactions/Transactions';
 import Goals from '@/features/goals/Goals';
 import Settings from '@/features/settings/Settings';
 import AppShell from '@/components/AppShell';
+import Login from '@/features/auth/Login';
+import RequireAuth from '@/features/auth/RequireAuth';
 
 
 export const router = createBrowserRouter([
-{
-path: '/',
-element: (
-<AppShell>
-<Overview />
-</AppShell>
-),
-},
-{
-path: '/transactions',
-element: (
-<AppShell>
-<Transactions />
-</AppShell>
-),
-},
-{
-path: '/goals',
-element: (
-<AppShell>
-<Goals />
-</AppShell>
-),
-},
-{
-path: '/settings',
-element: (
-<AppShell>
-<Settings />
-</AppShell>
-),
-},
+  {
+    path: '/login',
+    element: <Login />,
+  },
+  {
+    path: '/',
+    element: (
+      <RequireAuth>
+        <AppShell>
+          <Overview />
+        </AppShell>
+      </RequireAuth>
+    ),
+  },
+  {
+    path: '/transactions',
+    element: (
+      <RequireAuth>
+        <AppShell>
+          <Transactions />
+        </AppShell>
+      </RequireAuth>
+    ),
+  },
+  {
+    path: '/goals',
+    element: (
+      <RequireAuth>
+        <AppShell>
+          <Goals />
+        </AppShell>
+      </RequireAuth>
+    ),
+  },
+  {
+    path: '/settings',
+    element: (
+      <RequireAuth>
+        <AppShell>
+          <Settings />
+        </AppShell>
+      </RequireAuth>
+    ),
+  },
 ]);
