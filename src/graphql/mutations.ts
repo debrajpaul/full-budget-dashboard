@@ -12,9 +12,15 @@ taggedBy
 `;
 
 export const LOGIN = gql`
-  mutation Login($email: String!, $password: String!) {
-    login(email: $email, password: $password) {
+  mutation Login($value: LoginInput!) {
+    login(input: $value) {
       token
+      user {
+        email
+        name
+        tenantId
+        isActive
+      }
     }
   }
 `;
