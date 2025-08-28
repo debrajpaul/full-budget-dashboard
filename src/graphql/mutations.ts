@@ -10,3 +10,17 @@ taggedBy
 }
 }
 `;
+
+export const LOGIN = gql`
+  mutation Login($value: LoginInput!) {
+    login(input: $value) {
+      token
+      user {
+        email
+        name
+        tenantId
+        isActive
+      }
+    }
+  }
+`;
