@@ -1,4 +1,5 @@
 import { useQuery } from '@apollo/client';
+import { useState } from 'react';
 import { OVERVIEW } from '@/graphql/queries';
 import KPI from '@/components/KPI';
 import TrendChart from '@/components/TrendChart';
@@ -10,9 +11,14 @@ const now = new Date();
 
 export default function Overview() {
 const { tenantId } = useTenant();
+const [month, setMonth] = useState<number>(now.getMonth() + 1);
+const [year, setYear] = useState<number>(now.getFullYear());
+// Variables actually used for the query (update only on Search click)
+const [queryMonth, setQueryMonth] = useState<number>(month);
+const [queryYear, setQueryYear] = useState<number>(year);
+const [filters, setFilters] = useState<{ from: string; to: string }>({ from: '', to: '' });
 const { data, loading } = useQuery(OVERVIEW, {
-skip: !tenantId,
-variables: { tenantId, month: now.getMonth() + 1, year: now.getFullYear() },
+  variables: { month: queryMonth, year: queryYear },
 });
 
 
@@ -41,6 +47,36 @@ const kpis = [
 
 return (
 <div className="grid gap-6">
+<div className="rounded-2xl border bg-white dark:bg-zinc-900 p-4 grid gap-3">
+  <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+    <input
+      type="date"
+      className="rounded-xl border px-3 py-2 bg-white dark:bg-zinc-950"
+      value={filters.from}
+      onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value }))}
+    />
+    <input
+      type="date"
+      className="rounded-xl border px-3 py-2 bg-white dark:bg-zinc-950"
+      value={filters.to}
+      onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value }))}
+    />
+    <button
+      className="rounded-xl border px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
+      onClick={() => {
+        const base = filters.from || filters.to || new Date().toISOString().slice(0, 10);
+        const d = new Date(base);
+        const nextMonth = d.getMonth() + 1;
+        const nextYear = d.getFullYear();
+        setQueryMonth(nextMonth);
+        setQueryYear(nextYear);
+      }}
+      disabled={loading}
+    >
+      {loading ? 'Searching…' : 'Apply Filters'}
+    </button>
+  </div>
+</div>
 <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
 {kpis.map(k => <KPI key={k.label} label={k.label} value={k.value} fmt={k.fmt as any} />)}
 </div>

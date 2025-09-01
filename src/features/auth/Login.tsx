@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery } from '@apollo/client';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { LOGIN } from '@/graphql/mutations';
 import { useTenant } from '@/state/tenant';
+import { GET_TENANTS } from '@/graphql/queries';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [tenantId, setTenantIdInput] = useState(currentTenantId ?? '');
+  const { data: tenantsData, loading: tenantsLoading, error: tenantsError } = useQuery(GET_TENANTS);
   const [login, { loading, error }] = useMutation(LOGIN, {
     onCompleted: (data) => {
       const token = data?.login?.token;
@@ -26,6 +28,12 @@ export default function Login() {
     e.preventDefault();
     login({ variables: { value: { email, password, tenantId } } });
   };
+
+  useEffect(() => {
+    if (!tenantId && tenantsData?.tenants?.length) {
+      setTenantIdInput(tenantsData.tenants[0].id);
+    }
+  }, [tenantId, tenantsData]);
 
   if (localStorage.getItem('jwt')) return <Navigate to="/" replace />;
 
@@ -50,13 +58,25 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
           className="border rounded px-3 py-2"
         />
-        <input
-          type="text"
-          placeholder="Tenant ID"
+        <select
           value={tenantId}
           onChange={(e) => setTenantIdInput(e.target.value)}
-          className="border rounded px-3 py-2"
-        />
+          className="border rounded px-3 py-2 bg-white dark:bg-zinc-900"
+          disabled={tenantsLoading}
+        >
+          {tenantsLoading && <option>Loading tenants...</option>}
+          {!tenantsLoading && !tenantsData?.tenants?.length && (
+            <option value="">No tenants available</option>
+          )}
+          {!tenantsLoading && tenantsData?.tenants?.map((t: any) => (
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
+          ))}
+        </select>
+        {tenantsError && (
+          <div className="text-sm text-red-600">{tenantsError.message}</div>
+        )}
         {error && (
           <div className="text-sm text-red-600">{error.message}</div>
         )}

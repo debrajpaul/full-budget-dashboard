@@ -1,6 +1,5 @@
 import { useQuery } from '@apollo/client';
 import { SAVINGS_GOALS } from '@/graphql/queries';
-import { useTenant } from '@/state/tenant';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import dayjs from 'dayjs';
 
@@ -34,15 +33,13 @@ return (
 
 
 export default function Goals() {
-const { tenantId } = useTenant();
-const { data, loading } = useQuery(SAVINGS_GOALS, { skip: !tenantId, variables: { tenantId } });
-if (!tenantId) return <div>Select a tenant to continue.</div>;
-if (loading) return <div className="h-32 rounded-2xl bg-zinc-200/60 dark:bg-zinc-800 animate-pulse" />;
-const goals = data?.savingsGoals ?? [];
-return (
-<div className="grid gap-4 md:grid-cols-2">
-{goals.map((g: any) => <GoalCard key={g.id} goal={g} />)}
-{!goals.length && <div className="text-sm text-zinc-500">No goals yet.</div>}
-</div>
-);
+  const { data, loading } = useQuery(SAVINGS_GOALS);
+  if (loading) return <div className="h-32 rounded-2xl bg-zinc-200/60 dark:bg-zinc-800 animate-pulse" />;
+  const goals = data?.savingsGoals ?? [];
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      {goals.map((g: any) => <GoalCard key={g.id} goal={g} />)}
+      {!goals.length && <div className="text-sm text-zinc-500">No goals yet.</div>}
+    </div>
+  );
 }

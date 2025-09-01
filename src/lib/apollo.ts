@@ -2,12 +2,19 @@
 import { ApolloClient, InMemoryCache, createHttpLink, from, ApolloLink } from "@apollo/client";
 import { onError } from "@apollo/client/link/error";
 
-const httpLink = createHttpLink({ uri: "https://uzovyc6sl5.execute-api.ap-south-1.amazonaws.com/dev/" });
+const httpLink = createHttpLink({
+  uri: "https://uzovyc6sl5.execute-api.ap-south-1.amazonaws.com/dev/graphql",
+});
 
 const authLink = new ApolloLink((operation, forward) => {
   const token = localStorage.getItem("jwt");
+  const apiKey = import.meta.env.VITE_API_KEY as string | undefined;
   operation.setContext(({ headers = {} }) => ({
-    headers: { ...headers, authorization: token ? `Bearer ${token}` : "" },
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : "",
+      ...(apiKey ? { "x-api-key": apiKey } : {}),
+    },
   }));
   return forward(operation);
 });
@@ -26,7 +33,7 @@ export const client = new ApolloClient({
       Query: {
         fields: {
           transactions: {
-            keyArgs: ["tenantId", "filters"],
+            keyArgs: ["filters"],
             merge(existing = { items: [], cursor: null }, incoming) {
               return {
                 items: [...(existing?.items ?? []), ...(incoming?.items ?? [])],
