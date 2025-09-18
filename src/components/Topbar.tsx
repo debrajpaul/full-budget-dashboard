@@ -1,17 +1,27 @@
+type TopbarProps = {
+  title: string;
+};
 
 
-export default function Topbar() {
-return (
-<header className="h-14 border-b flex items-center justify-between px-4 bg-white/80 dark:bg-zinc-900/80 backdrop-blur">
-<div className="text-sm text-zinc-500">Dashboard</div>
-<div className="flex items-center gap-3">
-<button
-className="rounded-xl border px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
-onClick={() => document.documentElement.classList.toggle('dark')}
->
-Toggle Theme
-</button>
-</div>
-</header>
-);
+export default function Topbar({ title }: TopbarProps) {
+  const today = new Date().toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  return (
+    <header className="flex items-center justify-between px-6 py-4 border-b bg-white">
+      <div>
+        <h2 className="text-primary text-2xl font-semibold mb-1">{title}</h2>
+        <p className="text-sm text-gray-500">{today}</p>
+      </div>
+      <div className="flex items-center space-x-4">
+        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+          U
+        </div>
+      </div>
+    </header>
+  );
 }
