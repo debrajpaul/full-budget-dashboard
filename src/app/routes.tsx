@@ -22,7 +22,7 @@ export const router = createBrowserRouter([
     path: '/',
     element: (
       <RequireAuth>
-        <AppShell>
+        <AppShell title="Overview">
           <Overview />
         </AppShell>
       </RequireAuth>
@@ -32,7 +32,7 @@ export const router = createBrowserRouter([
     path: '/transactions',
     element: (
       <RequireAuth>
-        <AppShell>
+        <AppShell title="Transactions">
           <Transactions />
         </AppShell>
       </RequireAuth>
@@ -42,7 +42,7 @@ export const router = createBrowserRouter([
     path: '/goals',
     element: (
       <RequireAuth>
-        <AppShell>
+        <AppShell title="Goals">
           <Goals />
         </AppShell>
       </RequireAuth>
@@ -52,7 +52,7 @@ export const router = createBrowserRouter([
     path: '/settings',
     element: (
       <RequireAuth>
-        <AppShell>
+        <AppShell title="Settings">
           <Settings />
         </AppShell>
       </RequireAuth>

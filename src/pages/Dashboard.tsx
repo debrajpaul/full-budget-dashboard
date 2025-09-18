@@ -27,6 +27,7 @@ import {
   Cell,
   Legend,
 } from 'recharts';
+import { theme } from '@/styles/theme';
 
 const pieColors = ['#0052cc', '#36b37e', '#6554c0', '#172b4d'];
 
@@ -111,9 +112,9 @@ export default function Dashboard() {
     const totalExpense = summary.totalExpense ?? summary.totalExpenses ?? 0;
     const netSavings = summary.netSavings ?? summary.savings ?? 0;
     return [
-      { name: 'Income', value: totalIncome, fill: '#36b37e' },
-      { name: 'Expense', value: totalExpense, fill: '#ff5630' },
-      { name: 'Savings', value: netSavings, fill: '#6554c0' },
+      { name: 'Income', value: totalIncome, fill: theme.colors.income },
+      { name: 'Expense', value: totalExpense, fill: theme.colors.expense },
+      { name: 'Savings', value: netSavings, fill: theme.colors.savings },
     ];
   }, [summary]);
 
@@ -279,27 +280,29 @@ export default function Dashboard() {
             <p className="text-sm text-zinc-600">Monitor progress against each target.</p>
           </header>
           {!goalsLoading && !goalsError && goals.length > 0 && (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {goals.map((goal) => {
-                const target = typeof goal.target === 'number' ? goal.target : Number(goal.target) || 0;
-                const current = typeof goal.current === 'number' ? goal.current : Number(goal.current) || 0;
-                const progressPercent = target > 0 ? (current / target) * 100 : 0;
-                const safeProgress = Math.min(Math.max(progressPercent, 0), 100);
+            <div className="overflow-x-auto pb-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-w-[280px] sm:min-w-0">
+                {goals.map((goal) => {
+                  const target = typeof goal.target === 'number' ? goal.target : Number(goal.target) || 0;
+                  const current = typeof goal.current === 'number' ? goal.current : Number(goal.current) || 0;
+                  const progressPercent = target > 0 ? (current / target) * 100 : 0;
+                  const safeProgress = Math.min(Math.max(progressPercent, 0), 100);
 
-                return (
-                  <div key={goal.id} className="rounded-lg bg-white p-4 shadow-sm">
-                    <h4 className="mb-2 font-semibold text-primary">{goal.name}</h4>
-                    <p className="text-sm text-gray-500">Target: ₹{target.toFixed(2)}</p>
-                    <p className="text-sm text-gray-500">Current: ₹{current.toFixed(2)}</p>
-                    <div className="mt-3 h-2 w-full rounded-full bg-gray-200">
-                      <div
-                        className="h-2 rounded-full bg-income"
-                        style={{ width: `${safeProgress}%` }}
-                      />
+                  return (
+                    <div key={goal.id} className="bg-white p-4 rounded-lg shadow-sm">
+                      <h4 className="font-semibold text-primary mb-2">{goal.name}</h4>
+                      <p className="text-sm text-gray-500">Target: ₹{target.toFixed(2)}</p>
+                      <p className="text-sm text-gray-500">Current: ₹{current.toFixed(2)}</p>
+                      <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-income h-2 rounded-full"
+                          style={{ width: `${safeProgress}%` }}
+                        />
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           )}
           <Card
