@@ -6,12 +6,17 @@ import Settings from '@/features/settings/Settings';
 import AppShell from '@/components/AppShell';
 import Login from '@/features/auth/Login';
 import RequireAuth from '@/features/auth/RequireAuth';
+import HealthGate from '@/features/auth/HealthGate';
 
 
 export const router = createBrowserRouter([
   {
     path: '/login',
-    element: <Login />,
+    element: (
+      <HealthGate>
+        <Login />
+      </HealthGate>
+    ),
   },
   {
     path: '/',
