@@ -1,78 +1,94 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { LOGIN_MUTATION } from '@/graphql/mutations';
-import { GET_TENANTS } from '@/graphql/queries';
-import { useAuth } from '@/hooks/useAuth';
-import { useTenant } from '@/state/tenant';
+import { FormEvent, useMemo, useState } from 'react';
+import { gql, useMutation } from '@apollo/client';
+import { useNavigate } from 'react-router-dom';
 
-type LoginFormState = {
+const LOGIN_MUTATION = gql`
+  mutation Login($email: String!, $password: String!, $tenantId: TenantType!) {
+    login(input: { email: $email, password: $password, tenantId: $tenantId }) {
+      token
+      user {
+        name
+        email
+      }
+    }
+  }
+`;
+
+type TenantOption = 'PERSONAL' | 'CLIENT' | 'DEFAULT';
+
+type FormValues = {
   email: string;
   password: string;
-  tenantId: string;
+  tenantId: TenantOption;
 };
+
+const tenantOptions: { value: TenantOption; label: string }[] = [
+  { value: 'PERSONAL', label: 'Personal' },
+  { value: 'CLIENT', label: 'Client' },
+  { value: 'DEFAULT', label: 'Default' },
+];
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, token } = useAuth();
-  const { tenantId: storedTenantId, setTenantId } = useTenant();
-  const [formState, setFormState] = useState<LoginFormState>({
+  const [formValues, setFormValues] = useState<FormValues>({
     email: '',
     password: '',
-    tenantId: storedTenantId ?? '',
+    tenantId: 'PERSONAL',
   });
-  const { data: tenantsData, loading: tenantsLoading, error: tenantsError } = useQuery(GET_TENANTS);
-  const [authenticate, { loading, error }] = useMutation(LOGIN_MUTATION, {
-    onCompleted: (result) => {
-      const authPayload = result?.login;
-      const authToken = authPayload?.token;
-      const authUser = authPayload?.user;
+  const [formError, setFormError] = useState<string | null>(null);
 
-      if (authToken && authUser) {
-        login(authToken, authUser);
-        if (authUser.tenantId) setTenantId(authUser.tenantId);
+  const [login, { loading, error }] = useMutation(LOGIN_MUTATION, {
+    onCompleted: (response) => {
+      const token = response?.login?.token;
+      if (token) {
+        window.localStorage.setItem('jwt', token);
         navigate('/', { replace: true });
+      } else {
+        setFormError('Missing token in response. Please try again.');
       }
     },
   });
 
-  useEffect(() => {
-    if (!formState.tenantId) {
-      const firstTenant = tenantsData?.tenants?.[0]?.id;
-      if (firstTenant) {
-        setFormState((prev) => ({ ...prev, tenantId: firstTenant }));
-      }
-    }
-  }, [formState.tenantId, tenantsData]);
+  const isSubmitDisabled = useMemo(() => {
+    return loading || !formValues.email || !formValues.password;
+  }, [formValues.email, formValues.password, loading]);
 
-  if (token) return <Navigate to="/" replace />;
-
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = event.target;
-    setFormState((prev) => ({ ...prev, [name]: value }));
+  const handleChange = (field: keyof FormValues) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormValues((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    authenticate({ variables: { input: formState } });
+    setFormError(null);
+
+    if (!formValues.email || !formValues.password) {
+      setFormError('Email and password are required.');
+      return;
+    }
+
+    login({
+      variables: {
+        email: formValues.email,
+        password: formValues.password,
+        tenantId: formValues.tenantId,
+      },
+    }).catch(() => {
+      /* errors handled via Apollo error state */
+    });
   };
 
+  const apolloErrorMessage = error?.message;
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm space-y-6 rounded-xl bg-white p-10 shadow-lg dark:bg-zinc-900"
-      >
-        <div className="text-center">
-          <span className="text-2xl font-bold text-primary dark:text-white">Full Budget</span>
-        </div>
-        <header className="space-y-1 text-center">
-          <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">Log in</h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">Access your budgeting workspace</p>
+    <div className="min-h-screen flex items-center justify-center bg-zinc-50 py-12 px-4">
+      <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6 rounded-2xl bg-white p-8 shadow-lg">
+        <header className="space-y-2 text-center">
+          <h1 className="text-2xl font-semibold text-zinc-900">Sign in</h1>
+          <p className="text-sm text-zinc-500">Enter your credentials to access the dashboard.</p>
         </header>
 
         <div className="space-y-1">
-          <label htmlFor="email" className="block text-sm font-medium text-zinc-700 dark:text-zinc-200">
+          <label htmlFor="email" className="block text-sm font-medium text-zinc-700">
             Email
           </label>
           <input
@@ -80,15 +96,15 @@ export default function Login() {
             name="email"
             type="email"
             autoComplete="email"
+            value={formValues.email}
+            onChange={handleChange('email')}
             required
-            value={formState.email}
-            onChange={handleInputChange}
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/40 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-300"
           />
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="password" className="block text-sm font-medium text-zinc-700 dark:text-zinc-200">
+          <label htmlFor="password" className="block text-sm font-medium text-zinc-700">
             Password
           </label>
           <input
@@ -96,49 +112,42 @@ export default function Login() {
             name="password"
             type="password"
             autoComplete="current-password"
+            value={formValues.password}
+            onChange={handleChange('password')}
             required
-            value={formState.password}
-            onChange={handleInputChange}
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/40 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-300"
           />
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="tenantId" className="block text-sm font-medium text-zinc-700 dark:text-zinc-200">
+          <label htmlFor="tenantId" className="block text-sm font-medium text-zinc-700">
             Workspace
           </label>
           <select
             id="tenantId"
             name="tenantId"
-            required
-            value={formState.tenantId}
-            onChange={handleInputChange}
-            disabled={tenantsLoading}
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/40 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-75"
+            value={formValues.tenantId}
+            onChange={handleChange('tenantId')}
+            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-300"
           >
-            {tenantsLoading && <option>Loading...</option>}
-            {!tenantsLoading && tenantsData?.tenants?.length ? (
-              tenantsData.tenants.map((tenant: { id: string; name: string }) => (
-                <option key={tenant.id} value={tenant.id}>
-                  {tenant.name}
-                </option>
-              ))
-            ) : (
-              !tenantsLoading && <option value="">No tenants found</option>
-            )}
+            {tenantOptions.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
           </select>
         </div>
 
-        {(tenantsError || error) && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
-            {tenantsError?.message ?? error?.message}
+        {(formError || apolloErrorMessage) && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {formError || apolloErrorMessage}
           </div>
         )}
 
         <button
           type="submit"
-          disabled={loading || tenantsLoading}
-          className="w-full rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-80 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          disabled={isSubmitDisabled}
+          className="w-full rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-70"
         >
           {loading ? 'Signing in…' : 'Sign in'}
         </button>

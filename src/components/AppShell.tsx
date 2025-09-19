@@ -1,5 +1,6 @@
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import Header from './Header';
 
 
 type AppShellProps = {
@@ -15,7 +16,8 @@ export default function AppShell({ title, children }: AppShellProps) {
         <Sidebar />
         <div className="flex-1 flex flex-col">
           <Topbar title={title} />
-          <main className="p-6 grid gap-6">{children}</main>
+          <Header />
+          <main className="grid gap-6 p-6">{children}</main>
         </div>
       </div>
     </div>

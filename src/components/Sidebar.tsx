@@ -1,38 +1,69 @@
 import { NavLink } from 'react-router-dom';
-import { GoalsIcon, OverviewIcon, SettingsIcon, TransactionsIcon } from './Icon';
 
-const nav = [
-  { to: '/', label: 'Overview', icon: OverviewIcon },
-  { to: '/transactions', label: 'Transactions', icon: TransactionsIcon },
-  { to: '/goals', label: 'Goals', icon: GoalsIcon },
-  { to: '/settings', label: 'Settings', icon: SettingsIcon },
+type NavigationItem = {
+  label: string;
+  to: string;
+};
+
+const primaryNavigation: NavigationItem[] = [
+  { label: 'Dashboard', to: '/' },
+  { label: 'Statistics', to: '/statistics' },
+  { label: 'Transactions', to: '/transactions' },
+];
+
+const secondaryNavigation: NavigationItem[] = [
+  { label: 'Help', to: '/help' },
+  { label: 'Support', to: '/support' },
+  { label: 'Settings', to: '/settings' },
 ];
 
 export default function Sidebar() {
   return (
-    <aside className="flex flex-col w-56 h-screen bg-cardBg border-r border-gray-200 py-6 px-4">
-      <h1 className="text-primary text-2xl font-bold mb-10">Finance</h1>
-      <nav className="flex-1 space-y-2">
-        {nav.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex items-center px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-primary text-white shadow'
-                    : 'text-primary hover:bg-gray-100 hover:text-primary'
-                }`
-              }
-            >
-              <Icon />
-              {item.label}
-            </NavLink>
-          );
-        })}
+    <aside className="flex h-screen w-56 flex-col border-r border-gray-200 bg-white p-4">
+      <div className="mb-10">
+        <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Full Budget</span>
+        <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
+      </div>
+
+      <nav className="flex flex-1 flex-col gap-4">
+        <SidebarSection title="Navigation" items={primaryNavigation} />
+        <SidebarSection title="Support" items={secondaryNavigation} />
       </nav>
     </aside>
+  );
+}
+
+type SidebarSectionProps = {
+  title: string;
+  items: NavigationItem[];
+};
+
+function SidebarSection({ title, items }: SidebarSectionProps) {
+  return (
+    <section>
+      <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-400">{title}</p>
+      <ul className="space-y-1">
+        {items.map((item) => (
+          <li key={item.label}>
+            <SidebarLink {...item} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function SidebarLink({ label, to }: NavigationItem) {
+  return (
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        `block rounded-md px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 ${
+          isActive ? 'bg-gray-200 text-gray-900' : ''
+        }`
+      }
+    >
+      {label}
+    </NavLink>
   );
 }
