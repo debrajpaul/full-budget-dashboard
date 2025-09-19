@@ -1,12 +1,27 @@
 import { useQuery } from '@apollo/client';
 import KPI from '@/components/KPI';
+import OverviewCard from '@/components/OverviewCard';
 import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, PiggyBankIcon } from '@/components/Icon';
 import TrendChart from '@/components/TrendChart';
-import CreditCard from '@/components/CreditCard';
+import BalanceCard from '@/components/BalanceCard';
 import DonutBreakdown from '@/components/DonutBreakdown';
 import RecentTransactions from '@/components/RecentTransactions';
 import { OVERVIEW } from '@/graphql/queries';
 import { useTenant } from '@/state/tenant';
+
+const inrFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+});
+
+const formatINR = (amount: number) => inrFormatter.format(amount ?? 0);
+const percentFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'percent',
+  maximumFractionDigits: 1,
+});
+
+const formatPercent = (ratio: number) => percentFormatter.format(Math.abs(ratio));
 
 const now = new Date();
 
@@ -56,11 +71,32 @@ export default function Overview() {
   const review = data?.monthlyReview ?? {};
   const series = Array.isArray(review.series) ? review.series : [];
   const breakdown = Array.isArray(review.categoryBreakdown) ? review.categoryBreakdown : [];
-  const availableBalance = (review.totalIncome ?? 0) - (review.totalExpenses ?? 0);
+  const totalIncome = review.totalIncome ?? 0;
+  const availableBalance = totalIncome - (review.totalExpenses ?? 0);
   const budgetValue = series.reduce((total: number, entry: { budget?: number | null } | null) => {
     return total + (entry?.budget ?? 0);
   }, 0);
+  const actualSpent = series.reduce((total: number, entry: { actual?: number | null } | null) => {
+    return total + (entry?.actual ?? 0);
+  }, 0);
+  const budgetRemaining = Math.max(0, budgetValue - actualSpent);
   const activeTenant = tenants.find((tenant) => tenant.id === tenantId);
+
+  const cardBrands = ['Visa', 'Mastercard', 'Amex', 'RuPay'] as const;
+  const cardType = tenantId ? cardBrands[tenantId.charCodeAt(0) % cardBrands.length] : cardBrands[0];
+  const expiryDate = new Date(year + 3, month - 1);
+  const cardExpiry = `${String(expiryDate.getMonth() + 1).padStart(2, '0')}/${String(expiryDate.getFullYear()).slice(-2)}`;
+
+  const savings = review.savings ?? 0;
+  const savingsRate = totalIncome > 0 ? savings / totalIncome : undefined;
+  const formattedSavingsDelta = savingsRate !== undefined
+    ? `${formatINR(Math.abs(savings))} (${formatPercent(savingsRate)})`
+    : formatINR(Math.abs(savings));
+
+  const spendingRate = budgetValue > 0 ? actualSpent / budgetValue : undefined;
+  const formattedSpendingDelta = spendingRate !== undefined
+    ? `${formatINR(Math.abs(actualSpent))} (${formatPercent(spendingRate)})`
+    : formatINR(Math.abs(actualSpent));
 
   const periodLabel = new Date(year, month - 1).toLocaleDateString('en-US', {
     month: 'long',
@@ -76,6 +112,23 @@ export default function Overview() {
 
   return (
     <div className="space-y-6">
+      <div className="grid gap-4 lg:grid-cols-2">
+        <OverviewCard
+          title="Available Balance"
+          value={availableBalance}
+          delta={formattedSavingsDelta}
+          deltaLabel="Saved this month"
+          isPositive={savings >= 0}
+        />
+        <OverviewCard
+          title="Budget Remaining"
+          value={budgetRemaining}
+          delta={formattedSpendingDelta}
+          deltaLabel="Spent so far"
+          isPositive={actualSpent <= budgetValue}
+        />
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {kpis.map(({ label, value, color, icon }) => (
           <KPI key={label} label={label} value={value} color={color} icon={icon} />
@@ -97,10 +150,11 @@ export default function Overview() {
         </section>
 
         <div className="flex flex-col gap-6">
-          <CreditCard
+          <BalanceCard
             balance={availableBalance}
-            cardNumber="**** **** **** 1234"
-            holder={activeTenant?.name ?? "Account Holder"}
+            holderName={activeTenant?.name ?? 'Primary Account'}
+            expiry={cardExpiry}
+            cardType={cardType}
           />
 
           <section className="rounded-2xl border bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">

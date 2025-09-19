@@ -43,6 +43,47 @@ export const TRANSACTIONS = gql`
 `;
 
 
+export const AGGREGATE_SUMMARY = gql`
+  query AggregateSummary($year: Int!, $month: Int!) {
+    aggregateSummary(year: $year, month: $month) {
+      totalIncome
+      totalExpense
+      netSavings
+    }
+  }
+`;
+
+
+export const MONTHLY_REVIEW_SUMMARY = gql`
+  query MonthlyReviewSummary($year: Int!, $month: Int!) {
+    monthlyReview(year: $year, month: $month) {
+      totalIncome
+      totalExpenses
+      savings
+      categoryBreakdown { name amount }
+    }
+  }
+`;
+
+
+export const DASHBOARD_TRANSACTIONS = gql`
+  query DashboardTransactions($filters: TransactionsFilter!, $cursor: String) {
+    transactions(filters: $filters, cursor: $cursor) {
+      items {
+        id
+        date
+        description
+        amount
+        currency
+        category
+        taggedBy
+      }
+      cursor
+    }
+  }
+`;
+
+
 export const SAVINGS_GOALS = gql`
   query SavingsGoals {
     savingsGoals {

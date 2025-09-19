@@ -1,8 +1,11 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-color-scheme: light dark;
+  color-scheme: light dark;
 }
 
 @layer base {
@@ -19,5 +22,6 @@ color-scheme: light dark;
   }
 }
 
-
-html, body, #root { height: 100%; }
+html, body, #root {
+  height: 100%;
+}
