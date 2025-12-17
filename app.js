@@ -78,6 +78,24 @@ async function fetchTransactions(month, year) {
   return data.transactions?.items ?? [];
 }
 
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+let lineChartInstance;
+let donutChartInstance;
+
 // Render KPI values to the DOM
 function renderKPIs(review) {
   if (!review) return;
@@ -108,7 +126,10 @@ function renderLineChart(review) {
     ? series.map((entry) => Number(entry?.actual) || 0)
     : [48000, 52000, 49000, 51000];
   const ctx = document.getElementById('lineChart').getContext('2d');
-  new Chart(ctx, {
+  if (lineChartInstance) {
+    lineChartInstance.destroy();
+  }
+  lineChartInstance = new Chart(ctx, {
     type: 'line',
     data: {
       labels,
@@ -145,10 +166,13 @@ function renderLineChart(review) {
 function renderDonutChart(review) {
   if (!review) return;
   const ctx = document.getElementById('donutChart').getContext('2d');
+  if (donutChartInstance) {
+    donutChartInstance.destroy();
+  }
   const labels = review.categoryBreakdown?.map((item) => item.name) ?? [];
   // Chart.js doughnut slices don't handle negative values well, so use absolute magnitudes.
   const values = review.categoryBreakdown?.map((item) => Math.abs(item.amount ?? 0)) ?? [];
-  new Chart(ctx, {
+  donutChartInstance = new Chart(ctx, {
     type: 'doughnut',
     data: {
       labels,
@@ -205,14 +229,33 @@ function renderTransactions(transactions) {
   });
 }
 
-// Entry point: fetch data for the current month and year and render UI
-async function initDashboard() {
-  // Determine current month and year
+function populateFilters() {
   const now = new Date();
-  // const month = now.getMonth() + 1; // months are 0-indexed in JS
-  // const year = now.getFullYear();
-  const month = 4; // months are 0-indexed in JS
-  const year = 2025;
+  const defaultMonth = now.getMonth() + 1;
+  const defaultYear = now.getFullYear();
+  const monthSelect = document.getElementById('monthSelect');
+  const yearSelect = document.getElementById('yearSelect');
+
+  MONTHS.forEach((name, index) => {
+    const option = document.createElement('option');
+    option.value = index + 1;
+    option.textContent = name;
+    option.selected = index + 1 === defaultMonth;
+    monthSelect.appendChild(option);
+  });
+
+  for (let year = defaultYear; year >= defaultYear - 5; year -= 1) {
+    const option = document.createElement('option');
+    option.value = year;
+    option.textContent = year;
+    option.selected = year === defaultYear;
+    yearSelect.appendChild(option);
+  }
+
+  return { monthSelect, yearSelect, defaultMonth, defaultYear };
+}
+
+async function loadDashboard(month, year) {
   try {
     const [overview, transactions] = await Promise.all([
       fetchOverview(month, year),
@@ -228,4 +271,14 @@ async function initDashboard() {
 }
 
 // Run the dashboard once the page has loaded
-document.addEventListener('DOMContentLoaded', initDashboard);
+document.addEventListener('DOMContentLoaded', () => {
+  const { monthSelect, yearSelect, defaultMonth, defaultYear } = populateFilters();
+  const handleFilterChange = () => {
+    const selectedMonth = Number(monthSelect.value);
+    const selectedYear = Number(yearSelect.value);
+    loadDashboard(selectedMonth, selectedYear);
+  };
+  monthSelect.addEventListener('change', handleFilterChange);
+  yearSelect.addEventListener('change', handleFilterChange);
+  loadDashboard(defaultMonth, defaultYear);
+});
