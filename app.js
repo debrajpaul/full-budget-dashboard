@@ -6,13 +6,18 @@ const GRAPHQL_ENDPOINT = 'https://3w4l21wyp3.execute-api.ap-south-1.amazonaws.co
 // Provide a JWT token here if your GraphQL API requires authentication.
 // You can store the token in localStorage after login, or hard-code it for
 // testing. Leave empty if your API is public (not recommended in production).
-let AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJnb29nbGVAZ21haWwuY29tIiwiZW1haWwiOiJnb29nbGVAZ21haWwuY29tIiwidGVuYW50SWQiOiJQRVJTT05BTCIsImlhdCI6MTc2NTk2NjcyMywiZXhwIjoxNzY1OTcwMzIzfQ.U8fNbkAPalhhmwmHplIjeKdsHJN27ewwFKtVLk5DPTc';
+let AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJnb29nbGVAZ21haWwuY29tIiwiZW1haWwiOiJnb29nbGVAZ21haWwuY29tIiwidGVuYW50SWQiOiJQRVJTT05BTCIsImlhdCI6MTc2NTk3MDQ3MCwiZXhwIjoxNzY1OTc0MDcwfQ.ktRY3pcWim9MGn4jOVf8JwJcUZsqAnTSM72cn-1UNtc';
 
 // Format numbers as currency
 function formatCurrency(value) {
   const num = Number(value);
   const safe = Number.isFinite(num) ? num : 0;
-  return '$' + safe.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return safe.toLocaleString('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 // Generic GraphQL fetch helper
@@ -89,11 +94,20 @@ function renderKPIs(review) {
 
 // Render the line chart for budget vs actual using Chart.js
 function renderLineChart(review) {
-  // Temporary static chart until dynamic data is finalized.
+  const series = review?.series ?? [];
+  const hasData = Array.isArray(series) && series.length > 0;
+  const labels = hasData
+    ? series.map((entry) =>
+        new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      )
+    : ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+  const budgetData = hasData
+    ? series.map((entry) => Number(entry?.budget) || 0)
+    : [50000, 50000, 50000, 50000];
+  const actualData = hasData
+    ? series.map((entry) => Number(entry?.actual) || 0)
+    : [48000, 52000, 49000, 51000];
   const ctx = document.getElementById('lineChart').getContext('2d');
-  const labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-  const budgetData = [50000, 50000, 50000, 50000];
-  const actualData = [48000, 52000, 49000, 51000];
   new Chart(ctx, {
     type: 'line',
     data: {
