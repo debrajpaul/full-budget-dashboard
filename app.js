@@ -6,7 +6,7 @@ const GRAPHQL_ENDPOINT = 'https://3w4l21wyp3.execute-api.ap-south-1.amazonaws.co
 // Provide a JWT token here if your GraphQL API requires authentication.
 // You can store the token in localStorage after login, or hard-code it for
 // testing. Leave empty if your API is public (not recommended in production).
-let AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJnb29nbGVAZ21haWwuY29tIiwiZW1haWwiOiJnb29nbGVAZ21haWwuY29tIiwidGVuYW50SWQiOiJQRVJTT05BTCIsImlhdCI6MTc2NTk3MDQ3MCwiZXhwIjoxNzY1OTc0MDcwfQ.ktRY3pcWim9MGn4jOVf8JwJcUZsqAnTSM72cn-1UNtc';
+let AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJnb29nbGVAZ21haWwuY29tIiwiZW1haWwiOiJnb29nbGVAZ21haWwuY29tIiwidGVuYW50SWQiOiJQRVJTT05BTCIsImlhdCI6MTc2NTk3NDA4NSwiZXhwIjoxNzY1OTc3Njg1fQ.7fRBa9JprQ97f2Qag2YSOfd6gC8vBVg4iSmgYLtUYig';
 
 // Format numbers as currency
 function formatCurrency(value) {
@@ -62,14 +62,20 @@ async function fetchTransactions(month, year) {
     query Transactions($year: Int!, $month: Int!) {
       transactions(filters: { year: $year, month: $month }) {
         items {
-          id
-          date
-          description
-          debit
+          tenantId
+          userId
+          transactionId
+          bankName
           credit
-          currency
+          debit
+          balance
+          txnDate
+          description
           category
+          subCategory
+          embedding
           taggedBy
+          confidence
         }
       }
     }
@@ -214,16 +220,19 @@ function renderTransactions(transactions) {
     const dateCell = document.createElement('td');
     const descCell = document.createElement('td');
     const catCell = document.createElement('td');
+    const subCell = document.createElement('td');
     const amountCell = document.createElement('td');
-    dateCell.textContent = new Date(txn.date).toLocaleDateString('en-US');
+    dateCell.textContent = new Date(txn.txnDate).toLocaleDateString('en-US');
     descCell.textContent = txn.description;
     catCell.textContent = txn.category;
-    const amount = txn.amount ?? (txn.credit ?? 0) - (txn.debit ?? 0);
+    subCell.textContent = txn.subCategory;
+    const amount = (txn.credit ?? 0) - (txn.debit ?? 0);
     amountCell.textContent = formatCurrency(amount);
     amountCell.classList.add('text-right');
     row.appendChild(dateCell);
     row.appendChild(descCell);
     row.appendChild(catCell);
+    row.appendChild(subCell);
     row.appendChild(amountCell);
     tbody.appendChild(row);
   });
