@@ -48,19 +48,21 @@
       <!-- Transactions table -->
       <section class="transactions">
         <h2>Recent Transactions</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Description</th>
-              <th>Category</th>
-              <th class="text-right">Amount</th>
-            </tr>
-          </thead>
-          <tbody id="transactionsBody">
-            <!-- Rows will be populated dynamically -->
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th class="text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="transactionsBody">
+              <!-- Rows will be populated dynamically -->
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
     <script src="app.js"></script>
