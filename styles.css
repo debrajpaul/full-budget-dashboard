@@ -1,0 +1,114 @@
+/* Basic styling for the simplified dashboard */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f5f7fb;
+  color: #333;
+}
+
+.app-header {
+  background-color: #111936;
+  color: #fff;
+  padding: 20px;
+  text-align: center;
+}
+
+.container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.kpi-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.kpi-card {
+  flex: 1;
+  min-width: 150px;
+  background-color: #ffffff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.kpi-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #555;
+}
+
+.kpi-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1f60ff;
+}
+
+.charts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  margin-bottom: 32px;
+}
+
+.chart-container {
+  flex: 1;
+  min-width: 300px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 16px;
+}
+
+.chart-container h2 {
+  margin-top: 0;
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #555;
+}
+
+.transactions {
+  background-color: #ffffff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.transactions h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 18px;
+  color: #555;
+}
+
+.transactions table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.transactions th,
+.transactions td {
+  padding: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.transactions th {
+  text-align: left;
+  background-color: #f9fafb;
+  font-size: 14px;
+  color: #555;
+}
+
+.transactions td {
+  font-size: 14px;
+  color: #555;
+}
+
+.transactions td.text-right {
+  text-align: right;
+}
